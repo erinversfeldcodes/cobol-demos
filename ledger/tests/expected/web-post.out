@@ -1,0 +1,167 @@
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-store
+
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ledger Batch</title>
+<style>
+:root{--paper:#fbfbf4;--ink:#1d2a1f;--muted:#5d6b5f;--bar:#dcefd9;--rule:#9fb89c;--err:#a12a1f}
+@media (prefers-color-scheme:dark){:root{--paper:#0e1410;--ink:#b6f5b0;--muted:#6f9b6b;--bar:#16261a;--rule:#2d4a31;--err:#ff8a7a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+main{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:20px;letter-spacing:.12em;margin:0 0 4px}
+h2{font-size:14px;letter-spacing:.12em;color:var(--muted);margin:32px 0 8px;font-weight:normal}
+.sub{color:var(--muted);margin:0 0 24px}
+label{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted);margin:16px 0 4px}
+textarea{display:block;width:100%;min-height:12em;font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--rule);padding:8px;border-radius:2px;white-space:pre;overflow-x:auto}
+button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--rule);padding:8px 14px;border-radius:2px;cursor:pointer;letter-spacing:.08em;margin-top:16px}
+button:hover{background:var(--bar)}
+.error{color:var(--err)}
+pre{margin:0;padding:8px 0;overflow-x:auto;font-size:13px;line-height:1.5em;background:repeating-linear-gradient(var(--bar) 0 4.5em,transparent 4.5em 9em) 0 8px}
+</style></head><body><main>
+<h1>LEDGER BATCH</h1>
+<p class="sub">A GnuCOBOL sequential master-file update, served over CGI. Edit the fixed-width files and run the batch.</p>
+<form method="post" action="/cgi-bin/ledger">
+<label for="accounts">ACCOUNT MASTER</label>
+<textarea id="accounts" name="accounts" spellcheck="false">
+10000001THANDI NKOSI                  A000500000+00001245000
+10000002PIETER VAN DER MERWE          A000000000+00000320050
+10000003AYESHA PATEL                  A000100000-00000025000
+10000004SIPHO DLAMINI                 C000000000+00000000000
+10000005LERATO MOKOENA                A000000000+00009800000
+10000006NOMSA ZULU                    A000000000+00000500000
+10000007MOLLY &amp; SONS &lt;TRADING&gt;        A002000000+00015000000
+</textarea>
+<label for="transactions">TRANSACTIONS</label>
+<textarea id="transactions" name="transactions" spellcheck="false">
+1000000120261001D0000250000000000000SALARY OCT
+1000000220261001W0000005000000000000ATM CAPE TOWN
+1000000120261003T0000020000010000005SAVINGS
+1000000320261002W0000009000000000000RENT SHARE
+1000000420261002D0000001000000000000REFUND
+1000009920261004D0000000500000000000UNKNOWN ACCOUNT
+1000000A20261004D0000000500000000000BAD ACCOUNT NUMBER
+1000000220261332D0000000100000000000BAD DATE
+1000000220261005X0000000100000000000BAD TYPE
+1000000220261005D0000000000000000000ZERO AMOUNT
+1000000520261005T0000010000010000005SELF TRANSFER
+1000000520261006T0000015000010000004TO CLOSED ACCOUNT
+1000000720261007T0000075000010000099TO MISSING ACCOUNT
+1000000220261002T0000010000010000001LOAN REPAYMENT
+1000000320261003D0000015000000000000SALARY OCT
+ 
+1000000720261008W0000123456700000000SUPPLIER PAYMENT
+1000000220261009W0000050000000000000NEW LAPTOP
+1000000120261002W0000001999900000000GROCERIES
+</textarea>
+<button>RUN BATCH</button>
+</form>
+<h2>CONTROL REPORT</h2>
+<pre>LEDGER BATCH RUN - CONTROL REPORT                            RUN DATE 2026-10-31
+================================================================================
+TRANSACTIONS
+  RECORDS READ                                            18
+  REJECTED - INVALID RECORD                                5
+  REJECTED - NOT AUTHORISED                                4
+  ACCEPTED                                                 9
+  TRANSFERS HELD IN SUSPENSE                               2
+ACCOUNTS
+  MASTER RECORDS                                           7
+  STATEMENTS PRODUCED                                      5
+AMOUNTS
+  DEPOSITS                                         26,500.00
+  WITHDRAWALS                                      13,045.66
+  TRANSFERS OUT                                    12,000.00
+  TRANSFERS IN                                      3,000.00
+  HELD IN SUSPENSE                                  9,000.00
+LEDGER
+  OPENING TOTAL                                   268,400.50
+  EXPECTED CLOSING TOTAL                          272,854.84
+  CLOSING TOTAL                                   272,854.84
+================================================================================
+LEDGER BALANCED
+</pre>
+<h2>EXCEPTIONS</h2>
+<pre>LEDGER EXCEPTIONS REPORT                                                                   RUN DATE 2026-10-31
+ 
+     LINE  ACCOUNT   DATE        TYPE          AMOUNT  CODE  REASON
+  -------  --------  ----------  ----  --------------  ----  ----------------------------------------
+        7  1000000A  2026-10-04  DEP            50.00  E01   ACCOUNT NUMBER NOT NUMERIC
+        8  10000002  2026-13-32  DEP            10.00  E02   INVALID DATE
+        9  10000002  2026-10-05  X              10.00  E03   UNKNOWN TRANSACTION TYPE
+       10  10000002  2026-10-05  DEP             0.00  E04   INVALID AMOUNT
+       11  10000005  2026-10-05  XFER        1,000.00  E05   TRANSFER TO SAME ACCOUNT
+       18  10000002  2026-10-09  WDL         5,000.00  E12   INSUFFICIENT FUNDS
+        4  10000003  2026-10-02  WDL           900.00  E12   INSUFFICIENT FUNDS
+        5  10000004  2026-10-02  DEP           100.00  E11   ACCOUNT CLOSED
+        6  10000099  2026-10-04  DEP            50.00  E10   ACCOUNT NOT FOUND
+       12  10000005  2026-10-06  XFER        1,500.00  E21   TARGET 10000004 CLOSED - IN SUSPENSE
+       13  10000007  2026-10-07  XFER        7,500.00  E20   TARGET 10000099 NOT FOUND - IN SUSPENSE
+ 
+11 EXCEPTION(S)
+</pre>
+<h2>STATEMENTS</h2>
+<pre>============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000001  THANDI NKOSI
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                        12,450.00
+2026-10-01  DEPOSIT                 SALARY OCT                   25,000.00         37,450.00
+2026-10-02  TRANSFER FROM 10000002  LOAN REPAYMENT                1,000.00         38,450.00
+2026-10-02  WITHDRAWAL              GROCERIES                      -199.99         38,250.01
+2026-10-03  TRANSFER TO 10000005    SAVINGS                      -2,000.00         36,250.01
+            CLOSING BALANCE                                                        36,250.01
+ 
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000002  PIETER VAN DER MERWE
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                         3,200.50
+2026-10-01  WITHDRAWAL              ATM CAPE TOWN                  -500.00          2,700.50
+2026-10-02  TRANSFER TO 10000001    LOAN REPAYMENT               -1,000.00          1,700.50
+            CLOSING BALANCE                                                         1,700.50
+ 
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000003  AYESHA PATEL
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                          -250.00
+2026-10-03  DEPOSIT                 SALARY OCT                    1,500.00          1,250.00
+            CLOSING BALANCE                                                         1,250.00
+ 
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000005  LERATO MOKOENA
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                        98,000.00
+2026-10-03  TRANSFER FROM 10000001  SAVINGS                       2,000.00        100,000.00
+2026-10-06  TRANSFER TO 10000004    TO CLOSED ACCOUNT            -1,500.00         98,500.00
+            CLOSING BALANCE                                                        98,500.00
+ 
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000007  MOLLY &amp; SONS &lt;TRADING&gt;
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                       150,000.00
+2026-10-07  TRANSFER TO 10000099    TO MISSING ACCOUNT           -7,500.00        142,500.00
+2026-10-08  WITHDRAWAL              SUPPLIER PAYMENT            -12,345.67        130,154.33
+            CLOSING BALANCE                                                       130,154.33
+</pre>
+<h2>NEW MASTER FILE</h2>
+<pre>10000001THANDI NKOSI                  A000500000+00003625001
+10000002PIETER VAN DER MERWE          A000000000+00000170050
+10000003AYESHA PATEL                  A000100000+00000125000
+10000004SIPHO DLAMINI                 C000000000+00000000000
+10000005LERATO MOKOENA                A000000000+00009850000
+10000006NOMSA ZULU                    A000000000+00000500000
+10000007MOLLY &amp; SONS &lt;TRADING&gt;        A002000000+00013015433
+</pre>
+</main></body></html>
+[exit 0]

@@ -1,0 +1,9 @@
+Usage: amortise [--csv] PRINCIPAL ANNUAL-RATE MONTHS
+ 
+Prints the monthly repayment schedule for a loan.
+ 
+  PRINCIPAL    amount borrowed, e.g. 250000 or 250000.00
+  ANNUAL-RATE  nominal yearly interest rate in percent, e.g. 11.75
+  MONTHS       term in months, 1 to 600
+  --csv        print the schedule as CSV instead of a report
+[exit 0]

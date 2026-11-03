@@ -1,0 +1,2 @@
+amortise: Principal must be an amount from 0.01 to 999999999.99
+[exit 1]

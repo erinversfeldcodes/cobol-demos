@@ -1,0 +1,15 @@
+LEDGER BATCH RUN - CONTROL REPORT                            RUN DATE 2026-10-31
+================================================================================
+RUN ABORTED
+CANNOT OPEN TRANSACTION FILE tests/data/does-not-exist.dat
+ledger: run aborted: CANNOT OPEN TRANSACTION FILE tests/data/does-not-exist.dat
+--- exceptions.txt
+LEDGER EXCEPTIONS REPORT                                                                   RUN DATE 2026-10-31
+
+     LINE  ACCOUNT   DATE        TYPE          AMOUNT  CODE  REASON
+  -------  --------  ----------  ----  --------------  ----  ----------------------------------------
+
+NO EXCEPTIONS
+RUN ABORTED - REPORT IS INCOMPLETE
+--- work files left: 0
+[exit 16]

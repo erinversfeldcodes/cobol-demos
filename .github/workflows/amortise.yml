@@ -1,0 +1,24 @@
+name: amortise
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "amortise/**"
+      - ".github/workflows/amortise.yml"
+      - ".github/workflows/cobol-app.yml"
+  pull_request:
+    paths:
+      - "amortise/**"
+      - ".github/workflows/amortise.yml"
+      - ".github/workflows/cobol-app.yml"
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/cobol-app.yml
+    with:
+      app: amortise
+      deploy: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    secrets:
+      fly-api-token: ${{ secrets.FLY_API_TOKEN_AMORTISE }}
