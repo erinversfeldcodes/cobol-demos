@@ -21,6 +21,7 @@ reference to anything outside it:
   src/        COBOL programs: a shared core, a CLI front end, a CGI front end
   copy/       copybooks (record layouts and interfaces)
   tests/      golden-file tests (run.sh, expected/)
+  e2e/        Playwright tests against the running web app
   www/        static files served next to the CGI program
   Makefile    build, test, install
   Dockerfile  web image, which also runs the CLI
@@ -39,11 +40,31 @@ Tests compare each program's stdout, stderr and exit status with files in
 `tests/expected/`. After a deliberate change in output, regenerate them
 with `UPDATE=1 ./tests/run.sh` and review the diff.
 
+End-to-end tests drive the web app in Chromium, at desktop and phone
+sizes. `make e2e` builds the app's Docker image, serves it on port 8080
+and runs the suite against it:
+
+```sh
+(cd amortise/e2e && npm ci && npx playwright install chromium)
+make -C amortise e2e
+```
+
+To run the suite against a deployed app instead:
+`cd amortise/e2e && BASE_URL=https://... npx playwright test`.
+
 ## Deployment
 
 Each app has its own workflow (`.github/workflows/<app>.yml`) that only
-triggers on changes under its directory. Pushes to `main` run the tests
-and then `flyctl deploy` for that app alone. Pull requests only test.
+triggers on changes under its directory. It runs the golden tests, then
+the E2E suite against the app's Docker image. On `main` it then runs
+`flyctl deploy` for that app alone.
+
+Pull requests also get preview apps (`.github/workflows/preview.yml`).
+Each app the PR changes is deployed to its own Fly app,
+`cobol-demos-<app>-pr-<number>.fly.dev`, and the E2E suite runs against
+it. The previews are destroyed when the PR closes. This needs a repo
+secret `FLY_API_TOKEN` holding an org token
+(`fly tokens create org`), because previews create and destroy apps.
 
 One-off setup per app:
 
@@ -74,4 +95,6 @@ alternative, and `make install PREFIX=...` installs from source.
    `test` and `install`, and binaries named `build/<app>`.
 2. Copy `.github/workflows/amortise.yml` to `<app>.yml` and replace the
    app name and secret name.
-3. Add the app to `APPS` in the root Makefile and to the table above.
+3. Add an `e2e/` Playwright package and a Makefile `e2e` target, and add
+   the app to both lists in `.github/workflows/preview.yml`.
+4. Add the app to `APPS` in the root Makefile and to the table above.

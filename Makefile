@@ -2,7 +2,7 @@
 #   make -C amortise test
 APPS := amortise ledger
 
-.PHONY: build test clean
+.PHONY: build test e2e clean
 
-build test clean:
+build test e2e clean:
 	@for app in $(APPS); do $(MAKE) -C $$app $@ || exit 1; done

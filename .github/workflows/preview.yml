@@ -1,0 +1,125 @@
+# Per-PR preview apps. Every app the PR touches gets its own Fly app,
+# cobol-demos-<app>-pr-<number>, and its E2E suite runs against it. All
+# of a PR's preview apps are destroyed when the PR closes.
+#
+# Needs the repo secret FLY_API_TOKEN: an org token, since previews
+# create and destroy apps. The per-app deploy tokens can only deploy.
+name: preview
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+concurrency:
+  group: preview-pr-${{ github.event.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changes:
+    name: Find apps changed by this PR
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    outputs:
+      apps: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            amortise:
+              - "amortise/**"
+              - ".github/workflows/preview.yml"
+            ledger:
+              - "ledger/**"
+              - ".github/workflows/preview.yml"
+
+  preview:
+    name: Deploy and test ${{ matrix.app }} preview
+    needs: changes
+    if: needs.changes.outputs.apps != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.apps) }}
+    env:
+      FLY_APP: cobol-demos-${{ matrix.app }}-pr-${{ github.event.number }}
+      BASE_URL: https://cobol-demos-${{ matrix.app }}-pr-${{ github.event.number }}.fly.dev
+    steps:
+      # Pin to the PR head, so a re-run tests the same commit it deployed.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Deploy preview app
+        uses: superfly/fly-pr-review-apps@main
+        with:
+          name: ${{ env.FLY_APP }}
+          path: ${{ matrix.app }}
+          region: jnb
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles(format('{0}/e2e/package-lock.json', matrix.app)) }}
+      - name: Install E2E deps and Playwright browsers
+        working-directory: ${{ matrix.app }}/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      # Preview machines stop when idle, so the first request may be a
+      # cold start.
+      - name: Wait for preview app to wake up
+        run: |
+          for _ in $(seq 1 20); do
+            if curl -sf --max-time 10 "${BASE_URL}/cgi-bin/${{ matrix.app }}" >/dev/null 2>&1; then
+              echo "preview app is up"
+              exit 0
+            fi
+            echo "waiting for ${BASE_URL}..."
+            sleep 5
+          done
+          echo "::error::preview app never became reachable at ${BASE_URL}"
+          exit 1
+      - name: Run E2E suite against the deployed preview
+        working-directory: ${{ matrix.app }}/e2e
+        run: npx playwright test
+      - name: Upload Playwright traces (failures only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-${{ matrix.app }}-pr-${{ github.event.number }}
+          path: ${{ matrix.app }}/e2e/test-results/
+          retention-days: 14
+
+  cleanup:
+    name: Tear down ${{ matrix.app }} preview
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        # Every app, not just the changed ones: a later push may have
+        # reverted the change that created a preview.
+        app: [amortise, ledger]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      # On a closed PR this action destroys the app, and does nothing if
+      # it never existed.
+      - name: Destroy Fly preview app
+        uses: superfly/fly-pr-review-apps@main
+        with:
+          name: cobol-demos-${{ matrix.app }}-pr-${{ github.event.number }}
+          path: ${{ matrix.app }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
