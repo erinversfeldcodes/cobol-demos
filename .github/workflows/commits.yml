@@ -1,0 +1,29 @@
+# Releases are versioned from commit messages, so every commit a PR
+# could land on main must be a conventional commit. That's each commit
+# for merge and rebase merges, and the PR title for squash merges.
+name: commits
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Conventional commits
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check PR title
+        run: scripts/release.sh lint <<<"$TITLE"
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+      - name: Check commit messages
+        run: git log --no-merges --format=%s "$BASE..$HEAD" | scripts/release.sh lint
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}

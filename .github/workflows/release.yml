@@ -1,62 +1,110 @@
-# Releases one app's CLI when a tag named <app>-v<version> is pushed,
-# e.g. amortise-v1.0.0 or ledger-v0.2.0.
+# Releases every app whose conventional commits on main warrant a new
+# version (see scripts/release.sh). For each one it builds and tests the
+# CLI on Linux and macOS, then creates the <app>-v<version> tag and a
+# GitHub release with the binaries and notes. Nothing is tagged unless
+# every binary for that app built and passed its tests.
 name: release
 
 on:
   push:
-    tags: ["*-v*"]
+    branches: [main]
+  workflow_dispatch:
+
+# Serialised, so a second push waits for the first's tags to exist.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
-  create:
+  plan:
+    name: Find apps to release
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     outputs:
-      app: ${{ steps.tag.outputs.app }}
+      releases: ${{ steps.plan.outputs.releases }}
     steps:
       - uses: actions/checkout@v4
-      - id: tag
+        with:
+          fetch-depth: 0
+      - id: plan
         run: |
-          app="${GITHUB_REF_NAME%-v*}"
-          if [[ ! -f "$app/Makefile" ]]; then
-            echo "Tag $GITHUB_REF_NAME does not name an app directory" >&2
-            exit 1
-          fi
-          echo "app=$app" >> "$GITHUB_OUTPUT"
-      - name: Create release
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
-        env:
-          GH_TOKEN: ${{ github.token }}
+          releases='[]'
+          for makefile in */Makefile; do
+            app=${makefile%/Makefile}
+            version=$(scripts/release.sh version "$app")
+            if [[ -n $version ]]; then
+              echo "$app: $version"
+              releases=$(jq -c --arg app "$app" --arg tag "$app-v$version" \
+                '. + [{app: $app, tag: $tag}]' <<<"$releases")
+            else
+              echo "$app: no releasable changes"
+            fi
+          done
+          echo "releases=$releases" >> "$GITHUB_OUTPUT"
 
-  binaries:
-    needs: create
+  build:
+    name: Build ${{ matrix.release.tag }} for ${{ matrix.target.platform }}
+    needs: plan
+    if: needs.plan.outputs.releases != '[]'
     strategy:
       matrix:
-        include:
+        release: ${{ fromJSON(needs.plan.outputs.releases) }}
+        target:
           - os: ubuntu-24.04
             platform: linux-x86_64
             install: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnucobol3
           - os: macos-14
             platform: macos-arm64
             install: brew install gnucobol
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.target.os }}
     env:
-      APP: ${{ needs.create.outputs.app }}
+      APP: ${{ matrix.release.app }}
+      DIST: ${{ matrix.release.tag }}-${{ matrix.target.platform }}
     steps:
       - uses: actions/checkout@v4
       - name: Install GnuCOBOL
-        run: ${{ matrix.install }}
+        run: ${{ matrix.target.install }}
       - name: Build and test
         run: make -C "$APP" test
       - name: Package
         run: |
-          dist="$GITHUB_REF_NAME-${{ matrix.platform }}"
-          mkdir "$dist"
-          cp "$APP/build/$APP" "$APP/README.md" "$dist/"
-          tar -czf "$dist.tar.gz" "$dist"
-          echo "ASSET=$dist.tar.gz" >> "$GITHUB_ENV"
-      - name: Upload
-        run: gh release upload "$GITHUB_REF_NAME" "$ASSET"
+          mkdir "$DIST"
+          cp "$APP/build/$APP" "$APP/README.md" "$DIST/"
+          tar -czf "$DIST.tar.gz" "$DIST"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DIST }}
+          path: ${{ env.DIST }}.tar.gz
+          retention-days: 1
+
+  publish:
+    name: Publish ${{ matrix.release.tag }}
+    needs: [plan, build]
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        release: ${{ fromJSON(needs.plan.outputs.releases) }}
+    env:
+      APP: ${{ matrix.release.app }}
+      TAG: ${{ matrix.release.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ matrix.release.tag }}-*
+          path: dist
+          merge-multiple: true
+      # The notes cover the commits since the app's previous tag, so they
+      # are written before this release's tag exists.
+      - name: Create tag and release
+        run: |
+          scripts/release.sh notes "$APP" > notes.md
+          gh release create "$TAG" dist/*.tar.gz \
+            --target "$GITHUB_SHA" --title "$TAG" --notes-file notes.md
         env:
           GH_TOKEN: ${{ github.token }}
