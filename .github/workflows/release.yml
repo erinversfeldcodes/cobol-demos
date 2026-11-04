@@ -1,0 +1,62 @@
+# Releases one app's CLI when a tag named <app>-v<version> is pushed,
+# e.g. amortise-v1.0.0 or ledger-v0.2.0.
+name: release
+
+on:
+  push:
+    tags: ["*-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    runs-on: ubuntu-24.04
+    outputs:
+      app: ${{ steps.tag.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: |
+          app="${GITHUB_REF_NAME%-v*}"
+          if [[ ! -f "$app/Makefile" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not name an app directory" >&2
+            exit 1
+          fi
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+      - name: Create release
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  binaries:
+    needs: create
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux-x86_64
+            install: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnucobol3
+          - os: macos-14
+            platform: macos-arm64
+            install: brew install gnucobol
+    runs-on: ${{ matrix.os }}
+    env:
+      APP: ${{ needs.create.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GnuCOBOL
+        run: ${{ matrix.install }}
+      - name: Build and test
+        run: make -C "$APP" test
+      - name: Package
+        run: |
+          dist="$GITHUB_REF_NAME-${{ matrix.platform }}"
+          mkdir "$dist"
+          cp "$APP/build/$APP" "$APP/README.md" "$dist/"
+          tar -czf "$dist.tar.gz" "$dist"
+          echo "ASSET=$dist.tar.gz" >> "$GITHUB_ENV"
+      - name: Upload
+        run: gh release upload "$GITHUB_REF_NAME" "$ASSET"
+        env:
+          GH_TOKEN: ${{ github.token }}

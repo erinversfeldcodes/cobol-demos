@@ -1,0 +1,2 @@
+amortise: Annual rate must be a percentage from 0 to 100, at most 4 decimals
+[exit 1]

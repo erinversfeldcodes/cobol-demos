@@ -1,0 +1,15 @@
+LOAN AMORTISATION SCHEDULE
+ 
+Principal                     100.00
+Annual rate                   0.0000 %
+Term                               3 months
+Monthly payment                33.33
+Total interest                  0.00
+Total repaid                  100.00
+ 
+PERIOD           PAYMENT          INTEREST         PRINCIPAL           BALANCE
+------  ----------------  ----------------  ----------------  ----------------
+     1             33.33              0.00             33.33             66.67
+     2             33.33              0.00             33.33             33.34
+     3             33.34              0.00             33.34              0.00
+[exit 0]

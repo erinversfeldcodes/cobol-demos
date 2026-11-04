@@ -1,0 +1,103 @@
+LEDGER BATCH RUN - CONTROL REPORT                            RUN DATE 2026-10-31
+================================================================================
+TRANSACTIONS
+  RECORDS READ                                            18
+  REJECTED - INVALID RECORD                                5
+  REJECTED - NOT AUTHORISED                                4
+  ACCEPTED                                                 9
+  TRANSFERS HELD IN SUSPENSE                               2
+ACCOUNTS
+  MASTER RECORDS                                           7
+  STATEMENTS PRODUCED                                      5
+AMOUNTS
+  DEPOSITS                                         26,500.00
+  WITHDRAWALS                                      13,045.66
+  TRANSFERS OUT                                    12,000.00
+  TRANSFERS IN                                      3,000.00
+  HELD IN SUSPENSE                                  9,000.00
+LEDGER
+  OPENING TOTAL                                   268,400.50
+  EXPECTED CLOSING TOTAL                          272,854.84
+  CLOSING TOTAL                                   272,854.84
+================================================================================
+LEDGER BALANCED
+ledger: 11 exception(s), see OUTDIR/exceptions.txt
+--- exceptions.txt
+LEDGER EXCEPTIONS REPORT                                                                   RUN DATE 2026-10-31
+
+     LINE  ACCOUNT   DATE        TYPE          AMOUNT  CODE  REASON
+  -------  --------  ----------  ----  --------------  ----  ----------------------------------------
+        7  1000000A  2026-10-04  DEP            50.00  E01   ACCOUNT NUMBER NOT NUMERIC
+        8  10000002  2026-13-32  DEP            10.00  E02   INVALID DATE
+        9  10000002  2026-10-05  X              10.00  E03   UNKNOWN TRANSACTION TYPE
+       10  10000002  2026-10-05  DEP             0.00  E04   INVALID AMOUNT
+       11  10000005  2026-10-05  XFER        1,000.00  E05   TRANSFER TO SAME ACCOUNT
+       18  10000002  2026-10-09  WDL         5,000.00  E12   INSUFFICIENT FUNDS
+        4  10000003  2026-10-02  WDL           900.00  E12   INSUFFICIENT FUNDS
+        5  10000004  2026-10-02  DEP           100.00  E11   ACCOUNT CLOSED
+        6  10000099  2026-10-04  DEP            50.00  E10   ACCOUNT NOT FOUND
+       12  10000005  2026-10-06  XFER        1,500.00  E21   TARGET 10000004 CLOSED - IN SUSPENSE
+       13  10000007  2026-10-07  XFER        7,500.00  E20   TARGET 10000099 NOT FOUND - IN SUSPENSE
+
+11 EXCEPTION(S)
+--- statements.txt
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000001  THANDI NKOSI
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                        12,450.00
+2026-10-01  DEPOSIT                 SALARY OCT                   25,000.00         37,450.00
+2026-10-02  TRANSFER FROM 10000002  LOAN REPAYMENT                1,000.00         38,450.00
+2026-10-02  WITHDRAWAL              GROCERIES                      -199.99         38,250.01
+2026-10-03  TRANSFER TO 10000005    SAVINGS                      -2,000.00         36,250.01
+            CLOSING BALANCE                                                        36,250.01
+
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000002  PIETER VAN DER MERWE
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                         3,200.50
+2026-10-01  WITHDRAWAL              ATM CAPE TOWN                  -500.00          2,700.50
+2026-10-02  TRANSFER TO 10000001    LOAN REPAYMENT               -1,000.00          1,700.50
+            CLOSING BALANCE                                                         1,700.50
+
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000003  AYESHA PATEL
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                          -250.00
+2026-10-03  DEPOSIT                 SALARY OCT                    1,500.00          1,250.00
+            CLOSING BALANCE                                                         1,250.00
+
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000005  LERATO MOKOENA
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                        98,000.00
+2026-10-03  TRANSFER FROM 10000001  SAVINGS                       2,000.00        100,000.00
+2026-10-06  TRANSFER TO 10000004    TO CLOSED ACCOUNT            -1,500.00         98,500.00
+            CLOSING BALANCE                                                        98,500.00
+
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 10000007  MOLLY & SONS <TRADING>
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                       150,000.00
+2026-10-07  TRANSFER TO 10000099    TO MISSING ACCOUNT           -7,500.00        142,500.00
+2026-10-08  WITHDRAWAL              SUPPLIER PAYMENT            -12,345.67        130,154.33
+            CLOSING BALANCE                                                       130,154.33
+--- accounts.new.dat
+10000001THANDI NKOSI                  A000500000+00003625001
+10000002PIETER VAN DER MERWE          A000000000+00000170050
+10000003AYESHA PATEL                  A000100000+00000125000
+10000004SIPHO DLAMINI                 C000000000+00000000000
+10000005LERATO MOKOENA                A000000000+00009850000
+10000006NOMSA ZULU                    A000000000+00000500000
+10000007MOLLY & SONS <TRADING>        A002000000+00013015433
+--- work files left: 0
+[exit 4]

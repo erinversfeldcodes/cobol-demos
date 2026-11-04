@@ -1,0 +1,74 @@
+# Reusable pipeline for one app directory: test, then (optionally) deploy
+# that app alone to its own Fly app.
+name: cobol-app
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: Directory of the app, e.g. amortise
+        required: true
+        type: string
+      deploy:
+        description: Deploy to Fly after the tests pass
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      fly-api-token:
+        required: false
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GnuCOBOL
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnucobol3
+      - name: Build and test
+        run: make -C ${{ inputs.app }} test
+
+  # The same Playwright suite preview.yml runs against a PR's Fly app,
+  # here against the app's Docker image running on the runner.
+  e2e:
+    name: E2E (local)
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles(format('{0}/e2e/package-lock.json', inputs.app)) }}
+      - name: Install E2E deps and Playwright browsers
+        working-directory: ${{ inputs.app }}/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run E2E suite against the local image
+        run: make -C ${{ inputs.app }} e2e
+      - name: Upload Playwright traces (failures only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-${{ inputs.app }}
+          path: ${{ inputs.app }}/e2e/test-results/
+          retention-days: 14
+
+  deploy:
+    needs: [test, e2e]
+    if: inputs.deploy
+    runs-on: ubuntu-24.04
+    concurrency: deploy-${{ inputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        working-directory: ${{ inputs.app }}
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.fly-api-token }}

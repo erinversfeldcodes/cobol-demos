@@ -1,0 +1,3 @@
+Usage: ledger [--date YYYYMMDD] MASTER TRANSACTIONS OUTDIR
+Try 'ledger --help' for more information.
+[exit 2]

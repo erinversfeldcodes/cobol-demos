@@ -1,0 +1,37 @@
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-store
+
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ledger Batch</title>
+<style>
+:root{--paper:#fbfbf4;--ink:#1d2a1f;--muted:#5d6b5f;--bar:#dcefd9;--rule:#9fb89c;--err:#a12a1f}
+@media (prefers-color-scheme:dark){:root{--paper:#0e1410;--ink:#b6f5b0;--muted:#6f9b6b;--bar:#16261a;--rule:#2d4a31;--err:#ff8a7a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+main{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:20px;letter-spacing:.12em;margin:0 0 4px}
+h2{font-size:14px;letter-spacing:.12em;color:var(--muted);margin:32px 0 8px;font-weight:normal}
+.sub{color:var(--muted);margin:0 0 24px}
+label{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted);margin:16px 0 4px}
+textarea{display:block;width:100%;min-height:12em;font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--rule);padding:8px;border-radius:2px;white-space:pre;overflow-x:auto}
+button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--rule);padding:8px 14px;border-radius:2px;cursor:pointer;letter-spacing:.08em;margin-top:16px}
+button:hover{background:var(--bar)}
+.error{color:var(--err)}
+pre{margin:0;padding:8px 0;overflow-x:auto;font-size:13px;line-height:1.5em;background:repeating-linear-gradient(var(--bar) 0 4.5em,transparent 4.5em 9em) 0 8px}
+</style></head><body><main>
+<h1>LEDGER BATCH</h1>
+<p class="sub">A GnuCOBOL sequential master-file update, served over CGI. Edit the fixed-width files and run the batch.</p>
+<form method="post" action="/cgi-bin/ledger">
+<label for="accounts">ACCOUNT MASTER</label>
+<textarea id="accounts" name="accounts" spellcheck="false">
+</textarea>
+<label for="transactions">TRANSACTIONS</label>
+<textarea id="transactions" name="transactions" spellcheck="false">
+</textarea>
+<button>RUN BATCH</button>
+</form>
+<p class="error">Input is too large: keep both files under 30,000 characters</p>
+</main></body></html>
+[exit 0]

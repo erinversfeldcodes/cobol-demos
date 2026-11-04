@@ -1,0 +1,24 @@
+name: ledger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ledger/**"
+      - ".github/workflows/ledger.yml"
+      - ".github/workflows/cobol-app.yml"
+  pull_request:
+    paths:
+      - "ledger/**"
+      - ".github/workflows/ledger.yml"
+      - ".github/workflows/cobol-app.yml"
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/cobol-app.yml
+    with:
+      app: ledger
+      deploy: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    secrets:
+      fly-api-token: ${{ secrets.FLY_API_TOKEN_LEDGER }}

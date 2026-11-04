@@ -1,0 +1,6 @@
+build/
+tests/
+e2e/
+fly.toml
+Dockerfile
+.dockerignore

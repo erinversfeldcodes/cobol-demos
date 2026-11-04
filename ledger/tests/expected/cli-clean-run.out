@@ -1,0 +1,55 @@
+LEDGER BATCH RUN - CONTROL REPORT                            RUN DATE 2026-10-31
+================================================================================
+TRANSACTIONS
+  RECORDS READ                                             2
+  REJECTED - INVALID RECORD                                0
+  REJECTED - NOT AUTHORISED                                0
+  ACCEPTED                                                 2
+  TRANSFERS HELD IN SUSPENSE                               0
+ACCOUNTS
+  MASTER RECORDS                                           3
+  STATEMENTS PRODUCED                                      2
+AMOUNTS
+  DEPOSITS                                            100.00
+  WITHDRAWALS                                           0.00
+  TRANSFERS OUT                                        50.00
+  TRANSFERS IN                                         50.00
+  HELD IN SUSPENSE                                      0.00
+LEDGER
+  OPENING TOTAL                             1,000,009,250.00
+  EXPECTED CLOSING TOTAL                    1,000,009,350.00
+  CLOSING TOTAL                             1,000,009,350.00
+================================================================================
+LEDGER BALANCED
+--- exceptions.txt
+LEDGER EXCEPTIONS REPORT                                                                   RUN DATE 2026-10-31
+
+     LINE  ACCOUNT   DATE        TYPE          AMOUNT  CODE  REASON
+  -------  --------  ----------  ----  --------------  ----  ----------------------------------------
+
+NO EXCEPTIONS
+--- statements.txt
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 20000002  SENDER
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                        10,000.00
+2026-10-10  DEPOSIT                 DEPOSIT                         100.00         10,100.00
+2026-10-11  TRANSFER TO 20000003    GIFT                            -50.00         10,050.00
+            CLOSING BALANCE                                                        10,050.00
+
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 20000003  EXACT
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                           250.00
+2026-10-11  TRANSFER FROM 20000002  GIFT                             50.00            300.00
+            CLOSING BALANCE                                                           300.00
+--- accounts.new.dat
+20000001NEAR CEILING                  A000000000+99999900000
+20000002SENDER                        A000000000+00001005000
+20000003EXACT                         A000000000+00000030000
+--- work files left: 0
+[exit 0]

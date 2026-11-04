@@ -1,0 +1,39 @@
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-store
+
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loan Amortisation</title>
+<style>
+:root{--paper:#fbfbf4;--ink:#1d2a1f;--muted:#5d6b5f;--bar:#dcefd9;--rule:#9fb89c;--err:#a12a1f}
+@media (prefers-color-scheme:dark){:root{--paper:#0e1410;--ink:#b6f5b0;--muted:#6f9b6b;--bar:#16261a;--rule:#2d4a31;--err:#ff8a7a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+main{max-width:880px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:20px;letter-spacing:.12em;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 24px}
+form{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:24px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+input,button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--rule);padding:8px 10px;border-radius:2px}
+input{width:11em}button{cursor:pointer;letter-spacing:.08em}button:hover{background:var(--bar)}
+.error{color:var(--err)}
+dl{display:grid;grid-template-columns:max-content max-content;gap:2px 24px;margin:0 0 24px}
+dt{color:var(--muted)}dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:2px 10px;text-align:right;white-space:nowrap}
+th{border-bottom:1px solid var(--rule);font-weight:normal;color:var(--muted);letter-spacing:.08em}
+tbody tr:nth-child(6n+1),tbody tr:nth-child(6n+2),tbody tr:nth-child(6n+3){background:var(--bar)}
+</style></head><body><main>
+<h1>LOAN AMORTISATION</h1>
+<p class="sub">Calculated by a GnuCOBOL program over CGI.</p>
+<form method="get" action="/cgi-bin/amortise">
+<label>PRINCIPAL<input name="principal" inputmode="decimal" required value=""></label>
+<label>ANNUAL RATE %<input name="rate" inputmode="decimal" required value="12"></label>
+<label>TERM (MONTHS)<input name="term" inputmode="numeric" required value="3"></label>
+<button>CALCULATE</button>
+</form>
+<p class="error">Principal must be an amount from 0.01 to 999999999.99</p>
+</main></body></html>
+[exit 0]

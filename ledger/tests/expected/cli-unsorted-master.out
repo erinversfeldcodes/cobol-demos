@@ -1,0 +1,17 @@
+LEDGER BATCH RUN - CONTROL REPORT                            RUN DATE 2026-10-31
+================================================================================
+RUN ABORTED
+MASTER RECORD 2 (ACCOUNT 30000001) IS OUT OF SEQUENCE
+ledger: run aborted: MASTER RECORD 2 (ACCOUNT 30000001) IS OUT OF SEQUENCE
+--- exceptions.txt
+LEDGER EXCEPTIONS REPORT                                                                   RUN DATE 2026-10-31
+
+     LINE  ACCOUNT   DATE        TYPE          AMOUNT  CODE  REASON
+  -------  --------  ----------  ----  --------------  ----  ----------------------------------------
+        1  20000002  2026-10-10  DEP           100.00  E10   ACCOUNT NOT FOUND
+        2  20000002  2026-10-11  XFER           50.00  E10   ACCOUNT NOT FOUND
+
+2 EXCEPTION(S)
+RUN ABORTED - REPORT IS INCOMPLETE
+--- work files left: 0
+[exit 16]

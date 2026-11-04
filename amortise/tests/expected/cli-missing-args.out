@@ -1,0 +1,3 @@
+Usage: amortise [--csv] PRINCIPAL ANNUAL-RATE MONTHS
+Try 'amortise --help' for more information.
+[exit 2]
