@@ -3,7 +3,7 @@
 Small, self-contained COBOL applications built with GnuCOBOL. Each app
 ships two ways from the same source:
 
-- **CLI**: a native binary, released per app from a git tag
+- **CLI**: a native binary, released per app from its conventional commits
 - **Web**: a CGI program behind busybox httpd, deployed as its own Fly app
 
 | App | What it does |
@@ -27,6 +27,8 @@ reference to anything outside it:
   Dockerfile  web image, which also runs the CLI
   fly.toml    the app's own Fly configuration
 ```
+
+`scripts/release.sh` works out each app's next version for `release.yml`.
 
 ## Working locally
 
@@ -77,14 +79,29 @@ fly tokens create deploy -a cobol-demos-amortise
 
 ## Releasing a CLI
 
-Push a tag named `<app>-v<version>`:
+Releases are automatic and versioned from
+[conventional commits](https://www.conventionalcommits.org/). On every
+push to `main`, `release.yml` looks at the commits that touched each app's
+directory since that app's last `<app>-v<version>` tag:
 
-```sh
-git tag amortise-v1.0.0 && git push origin amortise-v1.0.0
-```
+| Commit | Release |
+| --- | --- |
+| `feat!: ...`, `fix(core)!: ...`, or a `BREAKING CHANGE:` footer | major |
+| `feat: ...` | minor |
+| `fix: ...`, `perf: ...` | patch |
+| `docs`, `test`, `ci`, `build`, `chore`, `refactor`, `style`, `revert` | none |
 
-`release.yml` tests the app and attaches Linux x86_64 and macOS arm64
-binaries to a GitHub release. The binaries link against the GnuCOBOL
+For each app due a release it builds and tests the CLI on Linux x86_64
+and macOS arm64, then creates the tag and a GitHub release with both
+binaries and notes grouped by change type. Apps are versioned
+separately, and an app's first release starts from 0.0.0.
+
+`commits.yml` fails a PR whose title or commits aren't conventional, so
+every merge strategy lands parseable messages. To see what a release
+would be: `scripts/release.sh version amortise` and
+`scripts/release.sh notes amortise`.
+
+The binaries link against the GnuCOBOL
 runtime, so users need `libcob` installed (`brew install gnucobol`, or
 `apt-get install libcob4`). The Docker image is the no-dependency
 alternative, and `make install PREFIX=...` installs from source.
