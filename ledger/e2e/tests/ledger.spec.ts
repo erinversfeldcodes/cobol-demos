@@ -1,19 +1,5 @@
-import { test, expect, Page } from "@playwright/test";
-
-function report(page: Page, heading: string) {
-  return page.locator(`h2:text-is("${heading}") + pre`);
-}
-
-async function runBatch(page: Page, inputs: { accounts?: string; transactions?: string } = {}) {
-  await page.goto("/");
-  if (inputs.accounts !== undefined) {
-    await page.getByLabel("ACCOUNT MASTER").fill(inputs.accounts);
-  }
-  if (inputs.transactions !== undefined) {
-    await page.getByLabel("TRANSACTIONS").fill(inputs.transactions);
-  }
-  await page.getByRole("button", { name: "RUN BATCH" }).click();
-}
+import { test, expect } from "@playwright/test";
+import { report, runBatch } from "./batch";
 
 // Records from samples/accounts.dat, in account order.
 const THANDI = "10000001THANDI NKOSI                  A000500000+00001245000";

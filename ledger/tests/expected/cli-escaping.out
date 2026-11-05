@@ -1,0 +1,54 @@
+LEDGER BATCH RUN - CONTROL REPORT                            RUN DATE 2026-10-31
+================================================================================
+TRANSACTIONS
+  RECORDS READ                                             3
+  REJECTED - INVALID RECORD                                1
+  REJECTED - NOT AUTHORISED                                0
+  ACCEPTED                                                 2
+  TRANSFERS HELD IN SUSPENSE                               0
+ACCOUNTS
+  MASTER RECORDS                                           3
+  STATEMENTS PRODUCED                                      1
+AMOUNTS
+  DEPOSITS                                            100.00
+  WITHDRAWALS                                          50.00
+  TRANSFERS OUT                                         0.00
+  TRANSFERS IN                                          0.00
+  HELD IN SUSPENSE                                      0.00
+LEDGER
+  OPENING TOTAL                             1,000,009,250.00
+  EXPECTED CLOSING TOTAL                    1,000,009,300.00
+  CLOSING TOTAL                             1,000,009,300.00
+================================================================================
+LEDGER BALANCED
+ledger: 1 exception(s), see OUTDIR/exceptions.txt
+--- exceptions.txt
+LEDGER EXCEPTIONS REPORT                                                                   RUN DATE 2026-10-31
+
+     LINE  ACCOUNT   DATE        TYPE          AMOUNT  CODE  REASON
+  -------  --------  ----------  ----  --------------  ----  ----------------------------------------
+        3  2000000X  2026-10-12  DEP            10.00  E01   ACCOUNT NUMBER NOT NUMERIC
+
+1 EXCEPTION(S)
+--- statements.txt
+============================================================================================
+STATEMENT OF ACCOUNT                                                     RUN DATE 2026-10-31
+ACCOUNT 20000002  SENDER
+--------------------------------------------------------------------------------------------
+DATE        DETAILS                 REFERENCE                       AMOUNT           BALANCE
+            OPENING BALANCE                                                        10,000.00
+2026-10-10  DEPOSIT                 QUOTE "Q" & <B>                 100.00         10,100.00
+2026-10-11  WITHDRAWAL              BACK\SLASH                      -50.00         10,050.00
+            CLOSING BALANCE                                                        10,050.00
+--- accounts.new.dat
+20000001NEAR CEILING                  A000000000+99999900000
+20000002SENDER                        A000000000+00001005000
+20000003EXACT                         A000000000+00000025000
+--- events.jsonl
+{"specversion":"1.0","id":"20261031-0000001","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.transaction.invalid","subject":"lines/3","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"line":3,"code":"E01","reason":"account_not_numeric","message":"ACCOUNT NUMBER NOT NUMERIC","record":"2000000X20261012D0000000100000000000TAB\tHERE"}}
+{"specversion":"1.0","id":"20261031-0000002","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.entry.posted","subject":"accounts/20000002","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"account":"20000002","kind":"deposit","amount":"100.00","balance":"10100.00","reference":"QUOTE \"Q\" & <B>","date":"2026-10-10","line":1}}
+{"specversion":"1.0","id":"20261031-0000003","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.entry.posted","subject":"accounts/20000002","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"account":"20000002","kind":"withdrawal","amount":"50.00","balance":"10050.00","reference":"BACK\\SLASH","date":"2026-10-11","line":2}}
+{"specversion":"1.0","id":"20261031-0000004","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.run.completed","subject":"runs/20261031","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"runDate":"2026-10-31","result":"balanced","counts":{"transactionsRead":3,"invalid":1,"declined":0,"accepted":2,"suspended":0,"accounts":3,"statements":1,"events":3},"totals":{"opening":"1000009250.00","deposits":"100.00","withdrawals":"50.00","transfersOut":"0.00","transfersIn":"0.00","suspense":"0.00","closing":"1000009300.00"}}}
+--- events parse: 4
+--- work files left: 0
+[exit 4]

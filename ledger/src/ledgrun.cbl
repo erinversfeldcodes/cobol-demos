@@ -86,6 +86,7 @@
        COPY "acctrec.cpy".
        COPY "txnrec.cpy".
        COPY "entryrec.cpy".
+       COPY "eventreq.cpy".
 
        01  WS-PATHS.
            05  WS-MASTER-PATH          PIC X(300).
@@ -245,6 +246,7 @@
                GOBACK
            END-IF
            PERFORM WRITE-EXCEPTION-HEADING
+           PERFORM BEGIN-EVENTS
 
            PERFORM SORT-TRANSACTIONS
            IF NOT WS-ABORTED
@@ -261,6 +263,13 @@
            END-IF
            IF NOT WS-ABORTED
                PERFORM RECONCILE
+           END-IF
+      *>   Publish the events only once the run is known to be good.
+           IF NOT WS-ABORTED
+               PERFORM COMMIT-EVENTS
+           END-IF
+           IF WS-ABORTED
+               PERFORM ABORT-EVENTS
            END-IF
 
            PERFORM WRITE-EXCEPTION-TRAILER
@@ -375,6 +384,9 @@
                MOVE TXN-IN-REC(17:1)   TO WS-EX-TYPE
                MOVE TXN-IN-REC(18:11)  TO WS-EX-AMOUNT
                PERFORM WRITE-EXCEPTION
+               SET EV-INVALID TO TRUE
+               MOVE TXN-IN-REC TO EV-RECORD
+               PERFORM EMIT-EVENT
            ELSE
                MOVE TX-ACCT-NO TO EN-ACCT-NO
                MOVE TX-DATE    TO EN-DATE
@@ -481,7 +493,9 @@
            MOVE EN-DATE    TO WS-EX-DATE
            MOVE EN-LEG     TO WS-EX-TYPE
            MOVE EN-AMOUNT  TO WS-EX-AMOUNT-N
-           PERFORM WRITE-EXCEPTION.
+           PERFORM WRITE-EXCEPTION
+           SET EV-DECLINED TO TRUE
+           PERFORM EMIT-EVENT.
 
        READ-WORK-TXN.
            READ WORK-TXNS INTO ENTRY-RECORD
@@ -616,7 +630,10 @@
                WHEN EN-TRANSFER-OUT ADD EN-AMOUNT TO TT-TRANSFERS-OUT
                WHEN EN-TRANSFER-IN  ADD EN-AMOUNT TO TT-TRANSFERS-IN
            END-EVALUATE
-           PERFORM WRITE-STATEMENT-LINE.
+           PERFORM WRITE-STATEMENT-LINE
+           SET EV-POSTED TO TRUE
+           MOVE WS-CUR-BALANCE TO EV-BALANCE
+           PERFORM EMIT-EVENT.
 
       *> The money has left the source account but cannot be credited.
        HOLD-IN-SUSPENSE.
@@ -639,7 +656,9 @@
                    STRING "TARGET " EN-ACCT-NO " AT LIMIT - IN SUSPENSE"
                        DELIMITED BY SIZE INTO WS-EX-REASON
            END-EVALUATE
-           PERFORM WRITE-EXCEPTION.
+           PERFORM WRITE-EXCEPTION
+           SET EV-SUSPENDED TO TRUE
+           PERFORM EMIT-EVENT.
 
        FINISH-ACCOUNT.
            IF WS-STATEMENT-OPEN
@@ -867,6 +886,64 @@
                MOVE "RUN ABORTED - REPORT IS INCOMPLETE" TO EXCEPTION-REC
                WRITE EXCEPTION-REC
            END-IF.
+
+      *> ---------------------------------------------------------------
+      *> Events: LEDGEVT holds them until the run is committed or aborted.
+      *> ---------------------------------------------------------------
+       BEGIN-EVENTS.
+           SET EV-BEGIN TO TRUE
+           MOVE LR-OUT-DIR TO EV-OUT-DIR
+           MOVE LR-RUN-DATE TO EV-RUN-DATE
+           CALL "LEDGEVT" USING EVENT-REQUEST
+           IF EV-STATUS NOT = "00"
+               MOVE "CANNOT WRITE EVENTS" TO LS-MESSAGE
+               PERFORM ABORT-RUN
+           END-IF.
+
+      *> Describes the current entry, or for INVALID the raw record, with
+      *> the exception fields WRITE-EXCEPTION just reported.
+       EMIT-EVENT.
+           SET EV-EMIT TO TRUE
+           MOVE WS-EX-LINE    TO EV-LINE
+           MOVE WS-EX-CODE    TO EV-CODE
+           MOVE WS-EX-REASON  TO EV-REASON
+           IF EV-POSTED
+               MOVE EN-SEQ    TO EV-LINE
+           END-IF
+           MOVE EN-ACCT-NO    TO EV-ACCT-NO
+           MOVE EN-DATE       TO EV-DATE
+           MOVE EN-LEG        TO EV-LEG
+           MOVE EN-AMOUNT     TO EV-AMOUNT
+           MOVE EN-OTHER-ACCT TO EV-OTHER-ACCT
+           MOVE EN-REF        TO EV-REF
+           CALL "LEDGEVT" USING EVENT-REQUEST.
+
+       COMMIT-EVENTS.
+           SET EV-COMMIT TO TRUE
+           MOVE CT-TXN-READ        TO EV-CT-READ
+           MOVE CT-REJECTED-FORMAT TO EV-CT-INVALID
+           MOVE CT-REJECTED-AUTH   TO EV-CT-DECLINED
+           MOVE CT-ACCEPTED        TO EV-CT-ACCEPTED
+           MOVE CT-SUSPENSE        TO EV-CT-SUSPENDED
+           MOVE CT-MASTER-RECORDS  TO EV-CT-ACCOUNTS
+           MOVE CT-STATEMENTS      TO EV-CT-STATEMENTS
+           MOVE TT-OPENING         TO EV-TT-OPENING
+           MOVE TT-DEPOSITS        TO EV-TT-DEPOSITS
+           MOVE TT-WITHDRAWALS     TO EV-TT-WITHDRAWALS
+           MOVE TT-TRANSFERS-OUT   TO EV-TT-TRANSFERS-OUT
+           MOVE TT-TRANSFERS-IN    TO EV-TT-TRANSFERS-IN
+           MOVE TT-SUSPENSE        TO EV-TT-SUSPENSE
+           MOVE TT-CLOSING         TO EV-TT-CLOSING
+           CALL "LEDGEVT" USING EVENT-REQUEST
+           IF EV-STATUS NOT = "00"
+               MOVE "CANNOT WRITE EVENTS" TO LS-MESSAGE
+               PERFORM ABORT-RUN
+           END-IF.
+
+       ABORT-EVENTS.
+           SET EV-ABORT TO TRUE
+           MOVE LS-MESSAGE TO EV-MESSAGE
+           CALL "LEDGEVT" USING EVENT-REQUEST.
 
       *> YYYYMMDD in WS-DATE-IN to YYYY-MM-DD in WS-DATE-TEXT.
        FORMAT-DATE.

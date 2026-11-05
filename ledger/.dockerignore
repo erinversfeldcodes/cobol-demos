@@ -1,6 +1,7 @@
 build/
 tests/
 e2e/
+schema/
 fly.toml
 Dockerfile
 .dockerignore

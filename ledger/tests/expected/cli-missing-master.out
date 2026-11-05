@@ -16,5 +16,8 @@ LEDGER EXCEPTIONS REPORT                                                        
 
 5 EXCEPTION(S)
 RUN ABORTED - REPORT IS INCOMPLETE
+--- events.jsonl
+{"specversion":"1.0","id":"20261031-0000001","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.run.aborted","subject":"runs/20261031","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"runDate":"2026-10-31","message":"CANNOT OPEN MASTER FILE tests/data/does-not-exist.dat"}}
+--- events parse: 1
 --- work files left: 0
 [exit 16]

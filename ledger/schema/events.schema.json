@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/erinversfeldcodes/cobol-demos/ledger/schema/events.schema.json",
+  "title": "Ledger batch event",
+  "description": "One line of events.jsonl: a CloudEvents 1.0 event in structured JSON mode. Properties are annotated with x-cobol, the field and PICTURE they are derived from. Amounts are exact decimal strings because their COBOL fields are implied-decimal (V) numbers.",
+  "type": "object",
+  "required": ["specversion", "id", "source", "type", "subject", "time", "datacontenttype", "data"],
+  "properties": {
+    "specversion": { "const": "1.0" },
+    "id": {
+      "type": "string",
+      "description": "Run date and the event's position in that run. Unique within a run; rerunning a date reuses the ids, and replaces that run.",
+      "pattern": "^[0-9]{8}-[0-9]{7}$"
+    },
+    "source": { "const": "/cobol-demos/ledger" },
+    "type": {
+      "enum": [
+        "io.github.erinversfeldcodes.cobol-demos.ledger.entry.posted",
+        "io.github.erinversfeldcodes.cobol-demos.ledger.transaction.invalid",
+        "io.github.erinversfeldcodes.cobol-demos.ledger.transaction.declined",
+        "io.github.erinversfeldcodes.cobol-demos.ledger.transfer.suspended",
+        "io.github.erinversfeldcodes.cobol-demos.ledger.run.completed",
+        "io.github.erinversfeldcodes.cobol-demos.ledger.run.aborted"
+      ]
+    },
+    "subject": {
+      "type": "string",
+      "description": "accounts/<account> for an account's events, lines/<line> for an unreadable record, runs/<date> for the run itself.",
+      "pattern": "^(accounts/[0-9]{8}|lines/[0-9]+|runs/[0-9]{8})$"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Midnight UTC on the run date: the business date of the batch, not when it ran."
+    },
+    "datacontenttype": { "const": "application/json" },
+    "data": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "io.github.erinversfeldcodes.cobol-demos.ledger.entry.posted" } } },
+      "then": { "properties": { "data": { "$ref": "#/$defs/EntryPosted" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "io.github.erinversfeldcodes.cobol-demos.ledger.transaction.invalid" } } },
+      "then": { "properties": { "data": { "$ref": "#/$defs/TransactionInvalid" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "io.github.erinversfeldcodes.cobol-demos.ledger.transaction.declined" } } },
+      "then": { "properties": { "data": { "$ref": "#/$defs/TransactionDeclined" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "io.github.erinversfeldcodes.cobol-demos.ledger.transfer.suspended" } } },
+      "then": { "properties": { "data": { "$ref": "#/$defs/TransferSuspended" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "io.github.erinversfeldcodes.cobol-demos.ledger.run.completed" } } },
+      "then": { "properties": { "data": { "$ref": "#/$defs/RunCompleted" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "io.github.erinversfeldcodes.cobol-demos.ledger.run.aborted" } } },
+      "then": { "properties": { "data": { "$ref": "#/$defs/RunAborted" } } }
+    }
+  ],
+  "$defs": {
+    "Account": {
+      "type": "string",
+      "description": "Account number. An identifier, so a string that keeps its leading zeros.",
+      "pattern": "^[0-9]{8}$",
+      "x-cobol": { "field": "AC-ACCT-NO", "picture": "9(8)", "copybook": "acctrec.cpy" }
+    },
+    "Amount": {
+      "type": "string",
+      "description": "Exact amount, two decimals, always positive: the kind says which way it moved.",
+      "pattern": "^[0-9]+\\.[0-9]{2}$",
+      "x-cobol": { "field": "EN-AMOUNT", "picture": "9(9)V99", "copybook": "entryrec.cpy" }
+    },
+    "SignedAmount": {
+      "type": "string",
+      "description": "Exact amount, two decimals, negative when overdrawn.",
+      "pattern": "^-?[0-9]+\\.[0-9]{2}$"
+    },
+    "Date": {
+      "type": "string",
+      "format": "date",
+      "x-cobol": { "field": "EN-DATE", "picture": "9(8)", "copybook": "entryrec.cpy", "format": "YYYYMMDD" }
+    },
+    "Line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Line of the transaction file the event comes from. Both legs of a transfer share their transaction's line.",
+      "x-cobol": { "field": "EN-SEQ", "picture": "9(7)", "copybook": "entryrec.cpy" }
+    },
+    "Kind": {
+      "description": "The entry's leg: a whole transaction (deposit, withdrawal, transfer) or one side of a transfer.",
+      "enum": ["deposit", "withdrawal", "transfer", "transfer_out", "transfer_in"],
+      "x-cobol": {
+        "field": "EN-LEG", "picture": "X", "copybook": "entryrec.cpy",
+        "values": { "D": "deposit", "W": "withdrawal", "T": "transfer", "O": "transfer_out", "I": "transfer_in" }
+      }
+    },
+    "Reference": {
+      "type": "string",
+      "maxLength": 20,
+      "x-cobol": { "field": "EN-REF", "picture": "X(20)", "copybook": "entryrec.cpy" }
+    },
+    "Message": {
+      "type": "string",
+      "description": "LEDGRUN's wording for people, as in exceptions.txt. Branch on reason, not this."
+    },
+    "EntryPosted": {
+      "type": "object",
+      "description": "An entry posted to an account. A transfer posts two: transfer_out on the source and transfer_in on the target.",
+      "additionalProperties": false,
+      "required": ["account", "kind", "amount", "balance", "reference", "date", "line"],
+      "properties": {
+        "account": { "$ref": "#/$defs/Account" },
+        "kind": { "$ref": "#/$defs/Kind" },
+        "amount": { "$ref": "#/$defs/Amount" },
+        "balance": {
+          "$ref": "#/$defs/SignedAmount",
+          "description": "The account's balance after this entry.",
+          "x-cobol": { "field": "AC-BALANCE", "picture": "S9(9)V99 SIGN LEADING SEPARATE", "copybook": "acctrec.cpy" }
+        },
+        "counterparty": {
+          "$ref": "#/$defs/Account",
+          "description": "The other account of a transfer. Present only on transfer_out and transfer_in.",
+          "x-cobol": { "field": "EN-OTHER-ACCT", "picture": "9(8)", "copybook": "entryrec.cpy" }
+        },
+        "reference": { "$ref": "#/$defs/Reference" },
+        "date": { "$ref": "#/$defs/Date" },
+        "line": { "$ref": "#/$defs/Line" }
+      }
+    },
+    "TransactionInvalid": {
+      "type": "object",
+      "description": "A record that failed validation (E01-E05). Its fields can't be trusted, so it is reported as the text read.",
+      "additionalProperties": false,
+      "required": ["line", "code", "reason", "message", "record"],
+      "properties": {
+        "line": { "$ref": "#/$defs/Line" },
+        "code": { "enum": ["E01", "E02", "E03", "E04", "E05"] },
+        "reason": { "enum": ["account_not_numeric", "invalid_date", "unknown_type", "invalid_amount", "invalid_target", "same_account"] },
+        "message": { "$ref": "#/$defs/Message" },
+        "record": {
+          "type": "string",
+          "maxLength": 56,
+          "description": "The input line, trailing spaces removed.",
+          "x-cobol": { "field": "TXN-RECORD", "picture": "X(56)", "copybook": "txnrec.cpy" }
+        }
+      }
+    },
+    "TransactionDeclined": {
+      "type": "object",
+      "description": "A valid transaction refused against the account master (E10-E13). Nothing was posted.",
+      "additionalProperties": false,
+      "required": ["account", "kind", "amount", "reference", "date", "line", "code", "reason", "message"],
+      "properties": {
+        "account": { "$ref": "#/$defs/Account" },
+        "kind": { "enum": ["deposit", "withdrawal", "transfer"] },
+        "amount": { "$ref": "#/$defs/Amount" },
+        "counterparty": {
+          "$ref": "#/$defs/Account",
+          "description": "The transfer's target. Present only when kind is transfer."
+        },
+        "reference": { "$ref": "#/$defs/Reference" },
+        "date": { "$ref": "#/$defs/Date" },
+        "line": { "$ref": "#/$defs/Line" },
+        "code": { "enum": ["E10", "E11", "E12", "E13"] },
+        "reason": { "enum": ["account_not_found", "account_closed", "insufficient_funds", "balance_limit_exceeded"] },
+        "message": { "$ref": "#/$defs/Message" }
+      }
+    },
+    "TransferSuspended": {
+      "type": "object",
+      "description": "A transfer that left its source account (see its transfer_out entry) but could not be credited to its target (E20-E22). The amount is held in suspense.",
+      "additionalProperties": false,
+      "required": ["from", "to", "amount", "reference", "date", "line", "code", "reason", "message"],
+      "properties": {
+        "from": { "$ref": "#/$defs/Account" },
+        "to": { "$ref": "#/$defs/Account" },
+        "amount": { "$ref": "#/$defs/Amount" },
+        "reference": { "$ref": "#/$defs/Reference" },
+        "date": { "$ref": "#/$defs/Date" },
+        "line": { "$ref": "#/$defs/Line" },
+        "code": { "enum": ["E20", "E21", "E22"] },
+        "reason": { "enum": ["target_not_found", "target_closed", "target_at_limit"] },
+        "message": { "$ref": "#/$defs/Message" }
+      }
+    },
+    "RunCompleted": {
+      "type": "object",
+      "description": "Always the last event of a run that balanced. Its presence means every event before it is final.",
+      "additionalProperties": false,
+      "required": ["runDate", "result", "counts", "totals"],
+      "properties": {
+        "runDate": { "type": "string", "format": "date" },
+        "result": { "const": "balanced" },
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["transactionsRead", "invalid", "declined", "accepted", "suspended", "accounts", "statements", "events"],
+          "properties": {
+            "transactionsRead": { "type": "integer", "minimum": 0 },
+            "invalid": { "type": "integer", "minimum": 0 },
+            "declined": { "type": "integer", "minimum": 0 },
+            "accepted": { "type": "integer", "minimum": 0 },
+            "suspended": { "type": "integer", "minimum": 0 },
+            "accounts": { "type": "integer", "minimum": 0, "description": "Master records read." },
+            "statements": { "type": "integer", "minimum": 0 },
+            "events": { "type": "integer", "minimum": 0, "description": "Events before this one, so a consumer can check it received them all." }
+          }
+        },
+        "totals": {
+          "type": "object",
+          "description": "The control report's ledger totals. closing = opening + deposits - withdrawals - transfersOut + transfersIn.",
+          "additionalProperties": false,
+          "required": ["opening", "deposits", "withdrawals", "transfersOut", "transfersIn", "suspense", "closing"],
+          "properties": {
+            "opening": { "$ref": "#/$defs/SignedAmount" },
+            "deposits": { "$ref": "#/$defs/SignedAmount" },
+            "withdrawals": { "$ref": "#/$defs/SignedAmount" },
+            "transfersOut": { "$ref": "#/$defs/SignedAmount" },
+            "transfersIn": { "$ref": "#/$defs/SignedAmount" },
+            "suspense": { "$ref": "#/$defs/SignedAmount" },
+            "closing": { "$ref": "#/$defs/SignedAmount" }
+          }
+        }
+      }
+    },
+    "RunAborted": {
+      "type": "object",
+      "description": "The only event of a run that stopped. No other events from the run are published.",
+      "additionalProperties": false,
+      "required": ["runDate", "message"],
+      "properties": {
+        "runDate": { "type": "string", "format": "date" },
+        "message": { "$ref": "#/$defs/Message" }
+      }
+    }
+  }
+}
