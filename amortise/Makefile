@@ -8,22 +8,28 @@ CORE := src/amortcalc.cbl $(wildcard copy/*.cpy)
 
 .PHONY: build test e2e install clean
 
-build: build/amortise build/amortweb
+build: build/amortise build/amortweb build/amortapi
 
 build/amortise: src/amortise.cbl $(CORE)
 	@mkdir -p build
 	$(COBC) -x $(COBFLAGS) -o $@ src/amortise.cbl src/amortcalc.cbl
 
-build/amortweb: src/amortweb.cbl $(CORE)
+build/amortweb: src/amortweb.cbl src/amortqry.cbl $(CORE)
 	@mkdir -p build
-	$(COBC) -x $(COBFLAGS) -o $@ src/amortweb.cbl src/amortcalc.cbl
+	$(COBC) -x $(COBFLAGS) -o $@ src/amortweb.cbl src/amortqry.cbl src/amortcalc.cbl
+
+build/amortapi: src/amortapi.cbl src/amortqry.cbl $(CORE)
+	@mkdir -p build
+	$(COBC) -x $(COBFLAGS) -o $@ src/amortapi.cbl src/amortqry.cbl src/amortcalc.cbl
 
 test: build
 	./tests/run.sh
 
 # Builds the web image, serves it on E2E_PORT and runs Playwright
-# against it. Needs Docker and `npm ci` in e2e/.
+# against it, including the MCP server's suite. Needs Docker and
+# `npm ci` in e2e/ and mcp/.
 e2e:
+	cd mcp && npm run build
 	docker build -t $(E2E_NAME) .
 	docker rm -f $(E2E_NAME) >/dev/null 2>&1 || true
 	docker run -d --name $(E2E_NAME) -p $(E2E_PORT):8080 $(E2E_NAME) >/dev/null

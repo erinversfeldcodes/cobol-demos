@@ -1,0 +1,7 @@
+Status: 400 Bad Request
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Cache-Control: no-store
+
+{"error":{"code":"payment_too_small","field":"principal","message":"Principal is too small to repay over this term"}}
+[exit 0]

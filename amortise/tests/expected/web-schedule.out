@@ -48,5 +48,6 @@ tbody tr:nth-child(6n+1),tbody tr:nth-child(6n+2),tbody tr:nth-child(6n+3){backg
 <tr><td>2</td><td>340.02</td><td>6.70</td><td>333.32</td><td>336.66</td></tr>
 <tr><td>3</td><td>340.03</td><td>3.37</td><td>336.66</td><td>0.00</td></tr>
 </tbody></table></div>
+<p class="sub">Also as JSON: <a href="/cgi-bin/amortise-api?principal=1000&amp;rate=12&amp;term=3">/cgi-bin/amortise-api</a> (<a href="/openapi.json">OpenAPI</a>)</p>
 </main></body></html>
 [exit 0]

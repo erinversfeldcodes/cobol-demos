@@ -1,0 +1,28 @@
+{
+  "name": "amortise-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server exposing the COBOL loan amortisation API as a tool",
+  "type": "module",
+  "bin": {
+    "amortise-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^7.0.2"
+  }
+}

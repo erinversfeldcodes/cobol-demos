@@ -1,0 +1,6 @@
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Cache-Control: no-store
+
+{"loan":{"principal":"1000.00","annualRate":"12.0000","termMonths":3},"payment":"340.02","totalInterest":"20.07","totalPaid":"1020.07","schedule":[{"period":1,"payment":"340.02","interest":"10.00","principal":"330.02","balance":"669.98"},{"period":2,"payment":"340.02","interest":"6.70","principal":"333.32","balance":"336.66"},{"period":3,"payment":"340.03","interest":"3.37","principal":"336.66","balance":"0.00"}]}
+[exit 0]

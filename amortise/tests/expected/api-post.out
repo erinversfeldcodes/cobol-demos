@@ -1,0 +1,8 @@
+Status: 405 Method Not Allowed
+Allow: GET
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Cache-Control: no-store
+
+{"error":{"code":"method_not_allowed","field":"method","message":"Only GET is supported"}}
+[exit 0]

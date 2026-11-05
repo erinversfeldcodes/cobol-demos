@@ -14,12 +14,6 @@
        COPY "amortreq.cpy".
        COPY "amortres.cpy".
 
-       01  WS-QUERY                    PIC X(1024).
-       01  WS-PAIRS.
-           05  WS-PAIR                 PIC X(256) OCCURS 6 TIMES.
-       01  WS-PAIR-INDEX               PIC 9.
-       01  WS-KEY                      PIC X(32).
-       01  WS-VALUE                    PIC X(256).
        01  WS-HAS-INPUT                PIC X VALUE "N".
            88  WS-INPUT-GIVEN                    VALUE "Y".
        01  WS-ROW                      PIC 9(3).
@@ -38,7 +32,7 @@
 
        PROCEDURE DIVISION.
        MAIN-PROCEDURE.
-           PERFORM READ-QUERY
+           CALL "AMORTQRY" USING AMORT-REQUEST WS-HAS-INPUT
            IF WS-INPUT-GIVEN
                CALL "AMORTCALC" USING AMORT-REQUEST AMORT-RESULT
            END-IF
@@ -57,43 +51,6 @@
            PERFORM PAGE-END
            STOP RUN.
 
-      *> Values are numbers, so no URL decoding is attempted: anything
-      *> percent-encoded simply fails numeric validation.
-       READ-QUERY.
-           ACCEPT WS-QUERY FROM ENVIRONMENT "QUERY_STRING"
-               ON EXCEPTION MOVE SPACES TO WS-QUERY
-           END-ACCEPT
-           IF WS-QUERY = SPACES
-               EXIT PARAGRAPH
-           END-IF
-           UNSTRING WS-QUERY DELIMITED BY "&"
-               INTO WS-PAIR(1) WS-PAIR(2) WS-PAIR(3)
-                    WS-PAIR(4) WS-PAIR(5) WS-PAIR(6)
-           END-UNSTRING
-           PERFORM VARYING WS-PAIR-INDEX FROM 1 BY 1
-                   UNTIL WS-PAIR-INDEX > 6
-               MOVE SPACES TO WS-KEY WS-VALUE
-               UNSTRING WS-PAIR(WS-PAIR-INDEX) DELIMITED BY "="
-                   INTO WS-KEY WS-VALUE
-               END-UNSTRING
-      *>       A value too long for the request field is made invalid
-      *>       rather than silently truncated into something valid.
-               IF WS-VALUE(21:) NOT = SPACES
-                   MOVE "X" TO WS-VALUE
-               END-IF
-               EVALUATE WS-KEY
-                   WHEN "principal"
-                       MOVE WS-VALUE TO AR-PRINCIPAL-TEXT
-                       SET WS-INPUT-GIVEN TO TRUE
-                   WHEN "rate"
-                       MOVE WS-VALUE TO AR-RATE-TEXT
-                       SET WS-INPUT-GIVEN TO TRUE
-                   WHEN "term"
-                       MOVE WS-VALUE TO AR-TERM-TEXT
-                       SET WS-INPUT-GIVEN TO TRUE
-               END-EVALUATE
-           END-PERFORM.
-
       *> Only echo what the user typed if it cannot break out of the
       *> HTML attribute it is placed in.
        PREPARE-FORM-VALUES.
@@ -108,10 +65,11 @@
            END-IF.
 
        PAGE-START.
-           DISPLAY "Content-Type: text/html; charset=utf-8"
-      *>   The trailing line feed produces the blank line that ends the
-      *>   CGI headers; DISPLAY of an empty literal would emit a space.
-           DISPLAY "Cache-Control: no-store" X"0A"
+      *>   Header lines end in CR LF: DISPLAY supplies the LF. The extra
+      *>   CR LF on the last one is the blank line that ends the CGI
+      *>   headers; DISPLAY of an empty literal would emit a space.
+           DISPLAY "Content-Type: text/html; charset=utf-8" X"0D"
+           DISPLAY "Cache-Control: no-store" X"0D0A0D"
            DISPLAY "<!doctype html>"
            DISPLAY '<html lang="en"><head><meta charset="utf-8">'
            DISPLAY '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -184,7 +142,12 @@
                        "</td><td>" FUNCTION TRIM(WS-ED-BALANCE)
                        "</td></tr>"
            END-PERFORM
-           DISPLAY "</tbody></table></div>".
+           DISPLAY "</tbody></table></div>"
+           DISPLAY '<p class="sub">Also as JSON: <a href="/cgi-bin/amortise-api?principal='
+                   FUNCTION TRIM(WS-FORM-PRINCIPAL) "&amp;rate="
+                   FUNCTION TRIM(WS-FORM-RATE) "&amp;term="
+                   FUNCTION TRIM(WS-FORM-TERM) '">/cgi-bin/amortise-api</a>'
+                   ' (<a href="/openapi.json">OpenAPI</a>)</p>'.
 
        PAGE-END.
            DISPLAY "</main></body></html>".
