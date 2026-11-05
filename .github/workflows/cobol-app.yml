@@ -23,10 +23,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install GnuCOBOL
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnucobol3
+      - uses: cachix/install-nix-action@v31
+      - name: Check the Dockerfile uses the flake's nixpkgs
+        run: make check-nix-pin
       - name: Build and test
-        run: make -C ${{ inputs.app }} test
+        run: nix develop -c make -C ${{ inputs.app }} test
 
   # The same Playwright suite preview.yml runs against a PR's Fly app,
   # here against the app's Docker image running on the runner.

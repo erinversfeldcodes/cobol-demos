@@ -7,11 +7,15 @@ on:
       - "amortise/**"
       - ".github/workflows/amortise.yml"
       - ".github/workflows/cobol-app.yml"
+      - "flake.nix"
+      - "flake.lock"
   pull_request:
     paths:
       - "amortise/**"
       - ".github/workflows/amortise.yml"
       - ".github/workflows/cobol-app.yml"
+      - "flake.nix"
+      - "flake.lock"
   workflow_dispatch:
 
 jobs:
