@@ -78,6 +78,8 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+          # An app's MCP server, if it has one, is tested by its E2E suite.
+          if [[ -d ../mcp ]]; then (cd ../mcp && npm ci && npm run build); fi
       # Preview machines stop when idle, so the first request may be a
       # cold start.
       - name: Wait for preview app to wake up

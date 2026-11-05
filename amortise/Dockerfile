@@ -26,7 +26,9 @@ RUN apt-get update \
 COPY --from=build /closure/nix/store /nix/store
 COPY --from=build /src/build/amortise /usr/local/bin/amortise
 COPY --from=build /src/build/amortweb /www/cgi-bin/amortise
+COPY --from=build /src/build/amortapi /www/cgi-bin/amortise-api
 COPY www/ /www/
+COPY httpd.conf /etc/httpd.conf
 USER web
 EXPOSE 8080
-CMD ["busybox", "httpd", "-f", "-v", "-p", "8080", "-h", "/www"]
+CMD ["busybox", "httpd", "-f", "-v", "-p", "8080", "-h", "/www", "-c", "/etc/httpd.conf"]

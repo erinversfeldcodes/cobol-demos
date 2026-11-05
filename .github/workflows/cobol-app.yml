@@ -50,6 +50,8 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+          # An app's MCP server, if it has one, is tested by its E2E suite.
+          if [[ -d ../mcp ]]; then (cd ../mcp && npm ci && npm run build); fi
       - name: Run E2E suite against the local image
         run: make -C ${{ inputs.app }} e2e
       - name: Upload Playwright traces (failures only)

@@ -1,0 +1,7 @@
+Status: 400 Bad Request
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Cache-Control: no-store
+
+{"error":{"code":"invalid_principal","field":"principal","message":"Principal must be an amount from 0.01 to 999999999.99"}}
+[exit 0]

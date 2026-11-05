@@ -1,0 +1,7 @@
+Status: 400 Bad Request
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Cache-Control: no-store
+
+{"error":{"code":"invalid_rate","field":"rate","message":"Annual rate must be a percentage from 0 to 100, at most 4 decimals"}}
+[exit 0]
