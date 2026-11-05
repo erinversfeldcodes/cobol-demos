@@ -65,10 +65,18 @@ jobs:
       DIST: ${{ matrix.release.tag }}-${{ matrix.target.platform }}
     steps:
       - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Test with the pinned toolchain
+        run: nix develop -c make -C "$APP" test
+      # A Nix-built binary loads its libraries from /nix/store, so the
+      # released CLI is rebuilt against the system's GnuCOBOL, where
+      # users install libcob from. `nix run` is the pinned alternative.
       - name: Install GnuCOBOL
         run: ${{ matrix.target.install }}
-      - name: Build and test
-        run: make -C "$APP" test
+      - name: Build the CLI for distribution
+        run: |
+          make -C "$APP" clean "build/$APP"
+          "$APP/build/$APP" --help
       - name: Package
         run: |
           mkdir "$DIST"

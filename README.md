@@ -29,14 +29,28 @@ reference to anything outside it:
 ```
 
 `scripts/release.sh` works out each app's next version for `release.yml`.
+`flake.nix` pins the toolchain for every app.
 
 ## Working locally
 
+The toolchain is pinned with Nix: `flake.lock` fixes the nixpkgs
+revision, and with it GnuCOBOL 3.2 and its JSON (cJSON) and XML
+(libxml2) support. Your shell, CI and the Docker images all use that
+same build, so there's no difference between the compiler you test with
+and the one that ships.
+
 ```sh
-brew install gnucobol        # or: apt-get install gnucobol3
+nix develop                  # or `use flake` in .envrc with direnv
 make test                    # every app
 make -C amortise test        # one app
 ```
+
+To move to a newer nixpkgs, run `nix flake update` and then
+`make nix-pin`, which points the Dockerfiles at the new revision. CI
+fails (`make check-nix-pin`) if they disagree.
+
+Without Nix, any GnuCOBOL 3.2 works (`brew install gnucobol`), but it
+may differ from what CI uses.
 
 Tests compare each program's stdout, stderr and exit status with files in
 `tests/expected/`. After a deliberate change in output, regenerate them
@@ -103,8 +117,15 @@ would be: `scripts/release.sh version amortise` and
 
 The binaries link against the GnuCOBOL
 runtime, so users need `libcob` installed (`brew install gnucobol`, or
-`apt-get install libcob4`). The Docker image is the no-dependency
-alternative, and `make install PREFIX=...` installs from source.
+`apt-get install libcob4`). For that reason the release tests each app
+with the pinned toolchain, then rebuilds the CLI against the runner's
+system GnuCOBOL for the tarball.
+
+The alternatives:
+- `nix run github:erinversfeldcodes/cobol-demos#amortise -- 250000 11.75 240`
+  runs the pinned build directly.
+- The Docker image has no dependencies.
+- `make install PREFIX=...` installs from source.
 
 ## Adding an app
 

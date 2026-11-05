@@ -34,9 +34,11 @@ jobs:
             amortise:
               - "amortise/**"
               - ".github/workflows/preview.yml"
+              - "flake.lock"
             ledger:
               - "ledger/**"
               - ".github/workflows/preview.yml"
+              - "flake.lock"
 
   preview:
     name: Deploy and test ${{ matrix.app }} preview
