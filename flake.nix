@@ -33,7 +33,7 @@
 
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
-          packages = [ pkgs.gnucobol pkgs.gnumake pkgs.python3 ];
+          packages = [ pkgs.gnucobol.bin pkgs.gnumake pkgs.python3 ];
         };
       });
     };
