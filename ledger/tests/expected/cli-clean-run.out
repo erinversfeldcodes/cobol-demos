@@ -51,5 +51,11 @@ DATE        DETAILS                 REFERENCE                       AMOUNT      
 20000001NEAR CEILING                  A000000000+99999900000
 20000002SENDER                        A000000000+00001005000
 20000003EXACT                         A000000000+00000030000
+--- events.jsonl
+{"specversion":"1.0","id":"20261031-0000001","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.entry.posted","subject":"accounts/20000002","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"account":"20000002","kind":"deposit","amount":"100.00","balance":"10100.00","reference":"DEPOSIT","date":"2026-10-10","line":1}}
+{"specversion":"1.0","id":"20261031-0000002","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.entry.posted","subject":"accounts/20000002","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"account":"20000002","kind":"transfer_out","amount":"50.00","balance":"10050.00","counterparty":"20000003","reference":"GIFT","date":"2026-10-11","line":2}}
+{"specversion":"1.0","id":"20261031-0000003","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.entry.posted","subject":"accounts/20000003","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"account":"20000003","kind":"transfer_in","amount":"50.00","balance":"300.00","counterparty":"20000002","reference":"GIFT","date":"2026-10-11","line":2}}
+{"specversion":"1.0","id":"20261031-0000004","source":"/cobol-demos/ledger","type":"io.github.erinversfeldcodes.cobol-demos.ledger.run.completed","subject":"runs/20261031","time":"2026-10-31T00:00:00Z","datacontenttype":"application/json","data":{"runDate":"2026-10-31","result":"balanced","counts":{"transactionsRead":2,"invalid":0,"declined":0,"accepted":2,"suspended":0,"accounts":3,"statements":2,"events":3},"totals":{"opening":"1000009250.00","deposits":"100.00","withdrawals":"0.00","transfersOut":"50.00","transfersIn":"50.00","suspense":"0.00","closing":"1000009350.00"}}}
+--- events parse: 4
 --- work files left: 0
 [exit 0]

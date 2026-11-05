@@ -23,8 +23,9 @@
       *> Read as a file because ACCEPT stops at 8191 bytes.
        FD  STDIN-FILE.
        01  STDIN-REC                   PIC X(65536).
+      *> Wide enough for an event line; input records are cut at 256.
        FD  TEXT-FILE.
-       01  TEXT-REC                    PIC X(256).
+       01  TEXT-REC                    PIC X(2048).
 
        WORKING-STORAGE SECTION.
        COPY "ledgreq.cpy".
@@ -68,11 +69,11 @@
        01  WS-HEX-CHAR                 PIC X.
        01  WS-HI                       PIC 99.
        01  WS-LO                       PIC 99.
-       01  WS-LINE                     PIC X(256).
-       01  WS-LINE-LEN                 PIC 9(3).
-       01  WS-ESCAPED                  PIC X(1600).
-       01  WS-ESCAPED-LEN              PIC 9(4).
-       01  WS-J                        PIC 9(3).
+       01  WS-LINE                     PIC X(2048).
+       01  WS-LINE-LEN                 PIC 9(4).
+       01  WS-ESCAPED                  PIC X(12288).
+       01  WS-ESCAPED-LEN              PIC 9(5).
+       01  WS-J                        PIC 9(4).
 
        PROCEDURE DIVISION.
        MAIN-PROCEDURE.
@@ -271,6 +272,9 @@
            DISPLAY "<h2>CONTROL REPORT</h2>"
            MOVE "control.txt" TO WS-FILE-NAME
            PERFORM SHOW-FILE
+           DISPLAY "<h2>EVENTS</h2>"
+           MOVE "events.jsonl" TO WS-FILE-NAME
+           PERFORM SHOW-FILE
            IF NOT LS-ABORTED
                DISPLAY "<h2>EXCEPTIONS</h2>"
                MOVE "exceptions.txt" TO WS-FILE-NAME
@@ -335,6 +339,8 @@
            MOVE "exceptions.txt" TO WS-FILE-NAME
            PERFORM DELETE-WORK-FILE
            MOVE "control.txt" TO WS-FILE-NAME
+           PERFORM DELETE-WORK-FILE
+           MOVE "events.jsonl" TO WS-FILE-NAME
            PERFORM DELETE-WORK-FILE
            CALL "CBL_DELETE_DIR" USING WS-WORK-DIR.
 
@@ -415,10 +421,11 @@
            DISPLAY WS-ESCAPED(1:WS-ESCAPED-LEN).
 
        PAGE-START.
-           DISPLAY "Content-Type: text/html; charset=utf-8"
-      *>   The trailing line feed produces the blank line that ends the
-      *>   CGI headers; DISPLAY of an empty literal would emit a space.
-           DISPLAY "Cache-Control: no-store" X"0A"
+      *>   Header lines end in CR LF: DISPLAY supplies the LF. The extra
+      *>   CR LF on the last one is the blank line that ends the CGI
+      *>   headers; DISPLAY of an empty literal would emit a space.
+           DISPLAY "Content-Type: text/html; charset=utf-8" X"0D"
+           DISPLAY "Cache-Control: no-store" X"0D0A0D"
            DISPLAY "<!doctype html>"
            DISPLAY '<html lang="en"><head><meta charset="utf-8">'
            DISPLAY '<meta name="viewport" content="width=device-width,initial-scale=1">'

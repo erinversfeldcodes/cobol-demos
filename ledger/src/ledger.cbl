@@ -109,7 +109,7 @@
            DISPLAY "  MASTER        account master file, sorted by account"
            DISPLAY "  TRANSACTIONS  deposits, withdrawals and transfers"
            DISPLAY "  OUTDIR        receives accounts.new.dat, statements.txt,"
-           DISPLAY "                exceptions.txt and control.txt"
+           DISPLAY "                exceptions.txt, control.txt and events.jsonl"
            DISPLAY "  --date        run date printed on reports (default today)"
            DISPLAY " "
            DISPLAY "Exit status: 0 clean, 4 exceptions reported, 16 run aborted.".

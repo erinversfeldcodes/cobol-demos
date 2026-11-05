@@ -35,9 +35,13 @@ batch() {
   { build/ledger --date 20261031 "$@" "$out" 2>&1; echo $? > "$scratch/rc"; } \
     | sed "s#$out#OUTDIR#g"
   rc=$(cat "$scratch/rc")
-  for f in exceptions.txt statements.txt accounts.new.dat; do
+  for f in exceptions.txt statements.txt accounts.new.dat events.jsonl; do
     if [[ -f "$out/$f" ]]; then echo "--- $f"; cat "$out/$f"; fi
   done
+  if [[ -f "$out/events.jsonl" ]]; then
+    python3 -c 'import json, sys; print("--- events parse:", sum(1 for line in open(sys.argv[1]) if json.loads(line)))' \
+      "$out/events.jsonl"
+  fi
   echo "--- work files left: $(find "$out" -name '.work-*' 2>/dev/null | wc -l | tr -d ' ')"
   return $rc
 }
@@ -61,6 +65,7 @@ check cli-unsorted-master batch tests/data/unsorted-accounts.dat tests/data/clea
 check cli-invalid-master  batch tests/data/invalid-accounts.dat tests/data/clean-transactions.dat
 check cli-missing-master  batch tests/data/does-not-exist.dat samples/transactions.dat
 check cli-missing-txns    batch samples/accounts.dat tests/data/does-not-exist.dat
+check cli-escaping        batch tests/data/limits-accounts.dat tests/data/escaping-transactions.dat
 check cli-help            build/ledger --help
 check cli-missing-args    build/ledger samples/accounts.dat
 check cli-bad-date        build/ledger --date 20261340 a b c

@@ -5,7 +5,7 @@ Applies a day's transactions to an account master file.
   MASTER        account master file, sorted by account
   TRANSACTIONS  deposits, withdrawals and transfers
   OUTDIR        receives accounts.new.dat, statements.txt,
-                exceptions.txt and control.txt
+                exceptions.txt, control.txt and events.jsonl
   --date        run date printed on reports (default today)
  
 Exit status: 0 clean, 4 exceptions reported, 16 run aborted.

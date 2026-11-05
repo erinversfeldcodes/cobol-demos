@@ -4,7 +4,7 @@ PREFIX   ?= /usr/local
 E2E_PORT ?= 8080
 E2E_NAME := cobol-demos-ledger-e2e
 
-CORE := src/ledgrun.cbl $(wildcard copy/*.cpy)
+CORE := src/ledgrun.cbl src/ledgevt.cbl $(wildcard copy/*.cpy)
 
 .PHONY: build test e2e install clean
 
@@ -12,11 +12,11 @@ build: build/ledger build/ledgerweb
 
 build/ledger: src/ledger.cbl $(CORE)
 	@mkdir -p build
-	$(COBC) -x $(COBFLAGS) -o $@ src/ledger.cbl src/ledgrun.cbl
+	$(COBC) -x $(COBFLAGS) -o $@ src/ledger.cbl src/ledgrun.cbl src/ledgevt.cbl
 
 build/ledgerweb: src/ledgerweb.cbl $(CORE)
 	@mkdir -p build
-	$(COBC) -x $(COBFLAGS) -o $@ src/ledgerweb.cbl src/ledgrun.cbl
+	$(COBC) -x $(COBFLAGS) -o $@ src/ledgerweb.cbl src/ledgrun.cbl src/ledgevt.cbl
 
 test: build
 	./tests/run.sh
